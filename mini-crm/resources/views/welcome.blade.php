@@ -1,10 +1,19 @@
-<!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+@extends('layouts.app')
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+@section('content')
+<div class="text-center py-20">
+    <h1 class="text-5xl font-bold mb-6 text-primary">Mini CRM</h1>
+    <p class="text-xl text-slate-600 mb-8">Customer Relationship Management System</p>
+    <div class="flex gap-4 justify-center">
+        @auth
+            <a href="/dashboard" class="bg-primary text-white px-6 py-3 rounded-lg hover:shadow-lg transition">Dashboard</a>
+        @else
+            <a href="/login" class="bg-primary text-white px-6 py-3 rounded-lg hover:shadow-lg transition">Login</a>
+            <a href="/register" class="bg-secondary text-white px-6 py-3 rounded-lg hover:shadow-lg transition">Register</a>
+        @endauth
+    </div>
+</div>
+@endsection
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
