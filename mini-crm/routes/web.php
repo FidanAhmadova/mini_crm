@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TaskController;
+use App\Http\Controllers\NoteController;
+use App\Http\Controllers\Auth\PasswordResetController;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Deal;
@@ -8,20 +11,36 @@ use App\Models\Task;
 use App\Models\Note;
 use Illuminate\Support\Facades\Route;
 
+// Public routes (no authentication required)
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+// Authentication routes (public)
+require __DIR__.'/auth.php';
 
+// Password reset routes
+Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+
+// Protected routes (authentication required)
 Route::middleware('auth')->group(function () {
+    // Dashboard
+    Route::get('/dashboard', function () {
+        return view('dashboard');
+    })->name('dashboard');
+
+    // Settings
+    Route::get('/settings', function () {
+        return view('settings');
+    })->name('settings');
+
+    // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Companies
+    // CRM Pages (authentication required)
     Route::get('/companies', function () {
         $companies = Company::orderByDesc('id')->paginate(10);
         return view('companies.index', compact('companies'));
@@ -36,7 +55,7 @@ Route::middleware('auth')->group(function () {
         Company::create(request(['name','number','website','address']));
         return back()->with('status','Company created');
     });
-    Route::post('/companies/{id}', function ($id) {
+    Route::put('/companies/{id}', function ($id) {
         $company = Company::findOrFail($id);
         request()->validate([
             'name' => 'required',
@@ -70,7 +89,7 @@ Route::middleware('auth')->group(function () {
         Customer::create(request(['first_name','last_name','email','phone','status','company_id']));
         return back()->with('status','Customer created');
     });
-    Route::post('/customers/{id}', function ($id) {
+    Route::put('/customers/{id}', function ($id) {
         $customer = Customer::findOrFail($id);
         request()->validate([
             'first_name' => 'required',
@@ -104,7 +123,7 @@ Route::middleware('auth')->group(function () {
         Deal::create(request(['customer_id','title','amount','status']));
         return back()->with('status','Deal created');
     });
-    Route::post('/deals/{id}', function ($id) {
+    Route::put('/deals/{id}', function ($id) {
         $deal = Deal::findOrFail($id);
         request()->validate([
             'customer_id' => 'required|exists:customers,id',
@@ -121,61 +140,14 @@ Route::middleware('auth')->group(function () {
     });
 
     // Tasks
-    Route::get('/tasks', function () {
-        $tasks = Task::orderByDesc('id')->paginate(10);
-        return view('tasks.index', compact('tasks'));
-    });
-    Route::post('/tasks', function () {
-        request()->validate([
-            'title' => 'required',
-            'description' => 'nullable',
-            'due_date' => 'nullable|date',
-            'status' => 'required|in:pending,done',
-        ]);
-        Task::create(request(['title','description','due_date','status']));
-        return back()->with('status','Task created');
-    });
-    Route::post('/tasks/{id}', function ($id) {
-        $task = Task::findOrFail($id);
-        request()->validate([
-            'title' => 'required',
-            'description' => 'nullable',
-            'due_date' => 'nullable|date',
-            'status' => 'required|in:pending,done',
-        ]);
-        $task->update(request(['title','description','due_date','status']));
-        return back()->with('status','Task updated');
-    });
-    Route::delete('/tasks/{id}', function ($id) {
-        Task::whereKey($id)->delete();
-        return back()->with('status','Task deleted');
-    });
+    Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
+    Route::post('/tasks', [TaskController::class, 'store'])->name('tasks.store');
+    Route::put('/tasks/{id}', [TaskController::class, 'update'])->name('tasks.update');
+    Route::delete('/tasks/{id}', [TaskController::class, 'destroy'])->name('tasks.destroy');
 
     // Notes
-    Route::get('/notes', function () {
-        $notes = Note::with(['user','customer','deal'])->orderByDesc('id')->paginate(10);
-        $customers = Customer::orderBy('first_name')->get();
-        $deals = Deal::orderByDesc('id')->get();
-        return view('notes.index', compact('notes','customers','deals'));
-    });
-    Route::post('/notes', function () {
-        request()->validate([
-            'content' => 'required',
-            'customer_id' => 'nullable|exists:customers,id',
-            'deal_id' => 'nullable|exists:deals,id',
-        ]);
-        Note::create([
-            'user_id' => auth()->id(),
-            'customer_id' => request('customer_id'),
-            'deal_id' => request('deal_id'),
-            'content' => request('content'),
-        ]);
-        return back()->with('status','Note added');
-    });
-    Route::delete('/notes/{id}', function ($id) {
-        Note::whereKey($id)->delete();
-        return back()->with('status','Note deleted');
-    });
+    Route::get('/notes', [NoteController::class, 'index'])->name('notes.index');
+    Route::post('/notes', [NoteController::class, 'store'])->name('notes.store');
+    Route::put('/notes/{id}', [NoteController::class, 'update'])->name('notes.update');
+    Route::delete('/notes/{id}', [NoteController::class, 'destroy'])->name('notes.destroy');
 });
-
-require __DIR__.'/auth.php';
