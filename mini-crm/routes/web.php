@@ -4,6 +4,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\NoteController;
 use App\Http\Controllers\Auth\PasswordResetController;
+use App\Http\Controllers\DashboardController;
 use App\Models\Company;
 use App\Models\Customer;
 use App\Models\Deal;
@@ -26,9 +27,7 @@ Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name(
 // Protected routes (authentication required)
 Route::middleware('auth')->group(function () {
     // Dashboard
-    Route::get('/dashboard', function () {
-        return view('dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // Settings
     Route::get('/settings', function () {

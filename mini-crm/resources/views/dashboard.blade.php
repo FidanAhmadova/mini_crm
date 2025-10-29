@@ -181,10 +181,10 @@
     new Chart(revenueCtx, {
         type: 'line',
         data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+            labels: @json($revenueLabels ?? []),
             datasets: [{
                 label: 'Revenue',
-                data: [12000, 19000, 15000, 25000, 22000, 30000],
+                data: @json($revenueData ?? []),
                 borderColor: '#3b82f6',
                 backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 tension: 0.4,
@@ -246,10 +246,12 @@
         data: {
             labels: ['Won', 'In Progress', 'New', 'Lost'],
             datasets: [{
-                data: [{{ App\Models\Deal::where('status', 'won')->count() }}, 
-                       {{ App\Models\Deal::where('status', 'in_progress')->count() }}, 
-                       {{ App\Models\Deal::where('status', 'new')->count() }}, 
-                       {{ App\Models\Deal::where('status', 'lost')->count() }}],
+                data: [
+                    {{ ($dealStatusCounts['won'] ?? 0) }},
+                    {{ ($dealStatusCounts['in_progress'] ?? 0) }},
+                    {{ ($dealStatusCounts['new'] ?? 0) }},
+                    {{ ($dealStatusCounts['lost'] ?? 0) }}
+                ],
                 backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'],
                 borderWidth: 0,
                 hoverOffset: 4
